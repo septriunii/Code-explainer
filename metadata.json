@@ -1,0 +1,7 @@
+{
+  "name": "Code Trace Explainer",
+  "description": "Interactive code execution trace visualizer and natural language annotation engine.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
