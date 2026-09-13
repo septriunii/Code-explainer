@@ -26,7 +26,6 @@ export const TraceControls: React.FC<TraceControlsProps> = ({
   const canPrev = currentStepIndex > 0;
   const canNext = currentStepIndex < totalSteps - 1;
 
-  // Keyboard navigation shortcuts: Left / Right arrows
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement).tagName)) {
@@ -49,73 +48,122 @@ export const TraceControls: React.FC<TraceControlsProps> = ({
   const percentage = totalSteps > 0 ? Math.round(((currentStepIndex + 1) / totalSteps) * 100) : 0;
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl p-3.5 shadow-xs flex flex-col gap-3">
-      {/* Top row: Playback buttons, stepper counter, and speed */}
-      <div className="flex flex-wrap items-center justify-between gap-2.5">
+    <div
+      className="border rounded-xl px-3.5 py-2.5 shadow-md flex flex-col gap-2 shrink-0 transition-colors duration-200"
+      style={{
+        backgroundColor: 'var(--bg-panel)',
+        borderColor: 'var(--border-main)',
+      }}
+    >
+      
+      {/* Top row: Stepper info, Controls, and Speed */}
+      <div className="flex flex-wrap items-center justify-between gap-2">
         
+        {/* Step count display */}
+        <div className="flex items-center gap-2">
+          <div
+            className="px-2.5 py-1 rounded-lg border text-xs font-mono font-bold flex items-center gap-1.5 shadow-inner"
+            style={{
+              backgroundColor: 'var(--bg-card)',
+              borderColor: 'var(--border-main)',
+              color: 'var(--text-main)',
+            }}
+          >
+            <span className="font-sans font-medium text-[10px]" style={{ color: 'var(--text-dim)' }}>Step</span>
+            <span style={{ color: 'var(--accent-text)' }}>{String(currentStepIndex + 1).padStart(2, '0')}</span>
+            <span style={{ color: 'var(--text-dim)' }}>/</span>
+            <span style={{ color: 'var(--text-muted)' }}>{String(totalSteps).padStart(2, '0')}</span>
+          </div>
+          {currentStep && (
+            <span className="text-xs font-mono hidden sm:inline" style={{ color: 'var(--text-muted)' }}>
+              Line <strong className="font-semibold" style={{ color: 'var(--accent-text)' }}>{currentStep.line}</strong>
+            </span>
+          )}
+        </div>
+
         {/* Playback action buttons */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1.5">
           <button
             onClick={() => onStepChange(0)}
             disabled={!canPrev}
-            className="w-8 h-8 flex items-center justify-center border border-slate-700 bg-slate-800/80 rounded text-slate-300 hover:bg-slate-700 disabled:opacity-30 transition-colors"
+            className="w-7 h-7 flex items-center justify-center rounded-lg border disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+            style={{
+              backgroundColor: 'var(--bg-card)',
+              borderColor: 'var(--border-main)',
+              color: 'var(--text-muted)',
+            }}
             title="Reset to beginning"
           >
             <RotateCcw className="w-3.5 h-3.5" />
           </button>
+
           <button
             onClick={() => onStepChange(Math.max(0, currentStepIndex - 1))}
             disabled={!canPrev}
-            className="w-8 h-8 flex items-center justify-center border border-slate-700 bg-slate-800/80 rounded text-slate-300 hover:bg-slate-700 disabled:opacity-30 transition-colors"
-            title="Previous step (Left arrow)"
+            className="px-2.5 py-1 rounded-lg border disabled:opacity-30 disabled:pointer-events-none transition-colors text-xs font-medium flex items-center gap-1.5 cursor-pointer"
+            style={{
+              backgroundColor: 'var(--bg-card)',
+              borderColor: 'var(--border-main)',
+              color: 'var(--text-main)',
+            }}
+            title="Previous step (Left Arrow)"
           >
             <SkipBack className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Prev</span>
           </button>
+
           <button
             onClick={onTogglePlay}
-            className="px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs flex items-center gap-1.5 shadow-xs transition-colors"
+            className="px-3.5 py-1 rounded-lg text-white font-semibold text-xs flex items-center gap-1.5 shadow-sm transition-all cursor-pointer hover:opacity-90"
+            style={{ backgroundColor: 'var(--accent-primary)' }}
             title="Play / Pause (Spacebar)"
           >
-            {isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 fill-current" />}
-            <span>{isPlaying ? 'Pause' : 'Play'}</span>
+            {isPlaying ? (
+              <>
+                <Pause className="w-3.5 h-3.5" />
+                <span>Pause</span>
+              </>
+            ) : (
+              <>
+                <Play className="w-3.5 h-3.5 fill-current" />
+                <span>Play</span>
+              </>
+            )}
           </button>
+
           <button
             onClick={() => onStepChange(Math.min(totalSteps - 1, currentStepIndex + 1))}
             disabled={!canNext}
-            className="w-8 h-8 flex items-center justify-center border border-slate-700 rounded bg-indigo-950/70 text-indigo-300 font-bold hover:bg-indigo-900/80 disabled:opacity-30 disabled:bg-transparent disabled:text-slate-600 transition-colors"
-            title="Next step (Right arrow)"
+            className="px-2.5 py-1 rounded-lg border disabled:opacity-30 disabled:pointer-events-none transition-colors text-xs font-medium flex items-center gap-1.5 cursor-pointer"
+            style={{
+              backgroundColor: 'var(--accent-subtle)',
+              borderColor: 'var(--accent-border)',
+              color: 'var(--accent-text)',
+            }}
+            title="Next step (Right Arrow)"
           >
+            <span>Next</span>
             <SkipForward className="w-3.5 h-3.5" />
           </button>
         </div>
 
-        {/* Step position counter badge */}
-        <div className="flex items-center space-x-2">
-          <span className="text-xs font-bold text-slate-400 tracking-wider">STEP</span>
-          <span className="px-3 py-1 font-mono text-sm font-bold bg-slate-950 border border-slate-800 rounded-md text-slate-100">
-            {totalSteps > 0 ? String(currentStepIndex + 1).padStart(2, '0') : '00'}
-            <span className="text-slate-600 mx-1.5">/</span>
-            {String(totalSteps).padStart(2, '0')}
-          </span>
-          {currentStep && (
-            <div className="text-xs font-mono text-slate-400 hidden sm:block">
-              Line <span className="font-semibold text-indigo-400">{currentStep.line}</span>
-            </div>
-          )}
-        </div>
-
-        {/* Playback speed selector */}
-        <div className="flex items-center gap-1 text-xs">
-          <span className="text-slate-400 font-medium text-[11px]">Speed:</span>
+        {/* Speed Controls */}
+        <div
+          className="flex items-center gap-1 border rounded-lg p-0.5 text-xs"
+          style={{
+            backgroundColor: 'var(--bg-card)',
+            borderColor: 'var(--border-main)',
+          }}
+        >
           {[0.5, 1, 2].map((s) => (
             <button
               key={s}
               onClick={() => onChangeSpeed(s)}
-              className={`px-1.5 py-0.5 rounded text-[11px] font-mono font-medium transition-colors ${
-                playbackSpeed === s
-                  ? 'bg-indigo-600 text-white'
-                  : 'text-slate-400 hover:bg-slate-800'
-              }`}
+              className="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium transition-colors cursor-pointer"
+              style={{
+                backgroundColor: playbackSpeed === s ? 'var(--accent-primary)' : 'transparent',
+                color: playbackSpeed === s ? '#ffffff' : 'var(--text-muted)',
+              }}
             >
               {s}x
             </button>
@@ -124,32 +172,25 @@ export const TraceControls: React.FC<TraceControlsProps> = ({
 
       </div>
 
-      {/* Scrubber slider bar */}
-      <div className="flex flex-col gap-1.5">
-        <input
-          type="range"
-          min={0}
-          max={Math.max(0, totalSteps - 1)}
-          value={currentStepIndex}
-          onChange={(e) => onStepChange(Number(e.target.value))}
-          className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500"
-        />
-        <div className="flex items-center justify-between text-[11px] text-slate-400 pt-0.5">
-          <div className="flex items-center space-x-2">
-            <div className="w-28 h-1.5 bg-slate-800 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-indigo-500 transition-all duration-150"
-                style={{ width: `${percentage}%` }}
-              />
-            </div>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">
-              {percentage}% Analyzed
-            </span>
-          </div>
-          <div>
-            Trace Verified: <span className="text-emerald-400 font-bold">SANDBOX SECURE</span>
-          </div>
+      {/* Progress timeline scrubber */}
+      <div className="flex items-center gap-2 pt-0.5">
+        <span className="text-[10px] shrink-0 font-mono" style={{ color: 'var(--text-dim)' }}>1</span>
+        <div className="relative flex-1 flex items-center">
+          <input
+            type="range"
+            min={0}
+            max={Math.max(0, totalSteps - 1)}
+            value={currentStepIndex}
+            onChange={(e) => onStepChange(Number(e.target.value))}
+            className="w-full h-1.5 rounded-lg appearance-none cursor-pointer border"
+            style={{
+              backgroundColor: 'var(--bg-card)',
+              borderColor: 'var(--border-main)',
+              accentColor: 'var(--accent-primary)',
+            }}
+          />
         </div>
+        <span className="text-[10px] shrink-0 font-mono" style={{ color: 'var(--text-dim)' }}>{totalSteps}</span>
       </div>
 
     </div>

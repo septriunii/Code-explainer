@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Database, Info, TrendingUp, Sparkles } from 'lucide-react';
+import { Database, TrendingUp, Sparkles, Clock, ChevronDown, ChevronUp } from 'lucide-react';
 import { VariableAnnotation, TraceStep } from '../types';
 
 interface VariableInspectorProps {
@@ -18,6 +18,7 @@ export const VariableInspector: React.FC<VariableInspectorProps> = ({
   onSelectStep,
 }) => {
   const [selectedVarHistory, setSelectedVarHistory] = useState<string | null>(null);
+  const [showAllRoster, setShowAllRoster] = useState<boolean>(false);
 
   // Map variable roles by variable name
   const roleMap = new Map<string, string>();
@@ -29,11 +30,11 @@ export const VariableInspector: React.FC<VariableInspectorProps> = ({
   const prevVars = previousStep?.variables || {};
   const varKeys = Object.keys(currentVars);
 
-  // Helper to format values
   const formatValue = (val: any): string => {
     if (val === null) return 'null';
     if (val === undefined) return 'undefined';
     if (typeof val === 'string') return `"${val}"`;
+    if (Array.isArray(val)) return `[${val.join(', ')}]`;
     if (typeof val === 'object') {
       try {
         return JSON.stringify(val);
@@ -44,117 +45,200 @@ export const VariableInspector: React.FC<VariableInspectorProps> = ({
     return String(val);
   };
 
-  // Helper to check if a value changed from previous step
+  const getTypeLabel = (val: any): string => {
+    if (Array.isArray(val)) return `list (${val.length})`;
+    if (val === null) return 'null';
+    if (typeof val === 'object') return 'dict';
+    return typeof val;
+  };
+
   const hasChanged = (key: string): boolean => {
     if (!previousStep) return true;
     return JSON.stringify(currentVars[key]) !== JSON.stringify(prevVars[key]);
   };
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-xs flex flex-col gap-3">
-      {/* Header */}
-      <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-          Variable Roles & State
-        </h3>
-        <span className="text-[11px] font-mono text-slate-500">
-          {varKeys.length} in scope
+    <div className="flex flex-col gap-3">
+      {/* Scope summary */}
+      <div className="flex items-center justify-between text-xs px-1" style={{ color: 'var(--text-muted)' }}>
+        <span>
+          <strong className="font-semibold" style={{ color: 'var(--text-main)' }}>{varKeys.length}</strong> variable{varKeys.length === 1 ? '' : 's'} in active scope
         </span>
+        {variableRoles.length > varKeys.length && (
+          <button
+            onClick={() => setShowAllRoster(!showAllRoster)}
+            className="text-[11px] font-medium flex items-center gap-1 cursor-pointer"
+            style={{ color: 'var(--accent-text)' }}
+          >
+            <span>{showAllRoster ? 'Hide global roster' : `View all program vars (${variableRoles.length})`}</span>
+            {showAllRoster ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+          </button>
+        )}
       </div>
+
+      {/* Global Roster Accordion (if toggled) */}
+      {showAllRoster && (
+        <div
+          className="p-3 rounded-xl border space-y-2"
+          style={{
+            backgroundColor: 'var(--bg-card)',
+            borderColor: 'var(--border-main)',
+          }}
+        >
+          <div className="text-[11px] font-semibold flex items-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
+            <Sparkles className="w-3.5 h-3.5" style={{ color: 'var(--accent-text)' }} />
+            <span>All Defined Program Variables</span>
+          </div>
+          <div className="grid grid-cols-1 gap-1.5 max-h-48 overflow-y-auto pr-1">
+            {variableRoles.map((vr) => (
+              <div
+                key={vr.name}
+                className="p-2 rounded-lg border flex items-baseline gap-2 text-xs"
+                style={{
+                  backgroundColor: 'var(--bg-panel)',
+                  borderColor: 'var(--border-main)',
+                }}
+              >
+                <code className="font-mono font-bold shrink-0" style={{ color: 'var(--accent-text)' }}>{vr.name}</code>
+                <span className="text-[11px] leading-snug" style={{ color: 'var(--text-muted)' }}>{vr.role}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Variables List */}
       {varKeys.length === 0 ? (
-        <div className="p-4 text-center text-xs text-slate-500 bg-slate-950 rounded-lg border border-slate-800">
-          No variables in scope at this step.
+        <div
+          className="p-6 text-center text-xs rounded-xl border"
+          style={{
+            backgroundColor: 'var(--bg-card)',
+            borderColor: 'var(--border-main)',
+            color: 'var(--text-dim)',
+          }}
+        >
+          No variables initialized in scope at this step.
         </div>
       ) : (
         <div className="space-y-2.5">
           {varKeys.map((name) => {
             const val = currentVars[name];
+            const role = roleMap.get(name) || 'Local variable defined in scope.';
             const changed = hasChanged(name);
-            const role = roleMap.get(name) || `State tracked in execution trace for "${name}".`;
             const isHistoryOpen = selectedVarHistory === name;
 
             return (
               <div
                 key={name}
-                className={`bg-slate-950 p-3 border rounded-lg shadow-xs transition-colors ${
-                  changed
-                    ? 'border-indigo-500/60 ring-1 ring-indigo-500/30'
-                    : 'border-slate-800'
-                }`}
+                className="p-3.5 rounded-xl border transition-all"
+                style={{
+                  backgroundColor: changed ? 'var(--bg-card)' : 'var(--bg-panel)',
+                  borderColor: changed ? 'var(--accent-border)' : 'var(--border-main)',
+                }}
               >
-                <div className="flex items-start justify-between gap-2 mb-1.5">
-                  <div className="flex items-center space-x-2">
-                    <span className="font-mono text-sm font-bold text-indigo-400">
+                {/* Top: Name, Tag, Value */}
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-sm font-bold" style={{ color: 'var(--text-main)' }}>
                       {name}
                     </span>
-                    {changed ? (
-                      <span className="text-[10px] bg-emerald-950/60 text-emerald-300 px-1.5 py-0.5 rounded font-medium border border-emerald-800">
+                    <span
+                      className="text-[10px] font-mono px-1.5 py-0.5 rounded border"
+                      style={{
+                        backgroundColor: 'var(--bg-subtle)',
+                        borderColor: 'var(--border-main)',
+                        color: 'var(--text-muted)',
+                      }}
+                    >
+                      {getTypeLabel(val)}
+                    </span>
+                    {changed && (
+                      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-emerald-950/70 text-emerald-300 border border-emerald-800/60">
                         Updated
-                      </span>
-                    ) : (
-                      <span className="text-[10px] bg-slate-900 text-slate-400 px-1.5 py-0.5 rounded font-medium border border-slate-800">
-                        State
                       </span>
                     )}
                   </div>
 
-                  {/* Value representation */}
                   <div className="shrink-0 text-right">
-                    <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded bg-slate-900 text-slate-100 max-w-[170px] inline-block truncate shadow-2xs border border-slate-700">
+                    <span
+                      className="font-mono text-xs font-semibold px-2.5 py-1 rounded-lg border max-w-[200px] inline-block truncate shadow-inner"
+                      style={{
+                        backgroundColor: 'var(--bg-card)',
+                        borderColor: 'var(--border-main)',
+                        color: 'var(--accent-text)',
+                      }}
+                    >
                       {formatValue(val)}
                     </span>
                   </div>
                 </div>
 
-                <p className="text-xs text-slate-300 leading-normal">
+                {/* Role / Description */}
+                <p className="text-xs leading-relaxed mt-2" style={{ color: 'var(--text-main)' }}>
                   {role}
                 </p>
 
-                {/* History toggle */}
-                <div className="mt-2.5 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px]">
+                {/* Footer action: View Timeline */}
+                <div className="mt-2.5 pt-2 border-t flex items-center justify-between text-[11px]" style={{ borderColor: 'var(--border-main)' }}>
                   <button
                     onClick={() => setSelectedVarHistory(isHistoryOpen ? null : name)}
-                    className="inline-flex items-center gap-1 text-slate-400 hover:text-indigo-400 transition-colors font-medium"
+                    className="inline-flex items-center gap-1.5 font-medium transition-colors cursor-pointer"
+                    style={{ color: 'var(--accent-text)' }}
                   >
-                    <TrendingUp className="w-3 h-3" />
-                    <span>{isHistoryOpen ? 'Hide History' : 'View Timeline'}</span>
+                    <Clock className="w-3 h-3" />
+                    <span>{isHistoryOpen ? 'Hide value history' : 'Inspect timeline'}</span>
                   </button>
-                  <span className="font-mono text-[10px] text-slate-500">
-                    type: {Array.isArray(val) ? 'array' : typeof val}
+                  <span className="text-[10px]" style={{ color: 'var(--text-dim)' }}>
+                    Step {allSteps.filter((s) => s.variables && Object.prototype.hasOwnProperty.call(s.variables, name)).length} of {allSteps.length} recorded
                   </span>
                 </div>
 
                 {/* Variable timeline across trace */}
                 {isHistoryOpen && (
-                  <div className="mt-2 p-2.5 rounded-lg bg-slate-900 border border-slate-800 text-xs font-mono space-y-1 max-h-36 overflow-y-auto">
-                    <div className="text-[10px] font-sans font-bold text-slate-500 uppercase tracking-wide mb-1">
-                      Timeline across steps:
+                  <div
+                    className="mt-2.5 p-3 rounded-xl border text-xs font-mono space-y-1.5 max-h-40 overflow-y-auto"
+                    style={{
+                      backgroundColor: 'var(--bg-card)',
+                      borderColor: 'var(--border-main)',
+                    }}
+                  >
+                    <div className="text-[10px] font-sans font-semibold uppercase tracking-wide mb-1" style={{ color: 'var(--text-muted)' }}>
+                      History of <span style={{ color: 'var(--accent-text)' }}>{name}</span> across steps:
                     </div>
                     {allSteps.map((step, sIdx) => {
-                      if (step.variables && step.variables[name] !== undefined) {
-                        const isThisStep = allSteps.indexOf(currentStep!) === sIdx;
-                        return (
-                          <div
-                            key={sIdx}
-                            onClick={() => onSelectStep?.(sIdx)}
-                            className={`flex items-center justify-between px-2 py-1 rounded cursor-pointer transition-colors ${
-                              isThisStep
-                                ? 'bg-indigo-950/70 text-indigo-300 font-bold border border-indigo-800'
-                                : 'hover:bg-slate-800 text-slate-300'
-                            }`}
-                          >
-                            <span className="text-[11px]">
-                              Step #{sIdx + 1} (Line {step.line}):
-                            </span>
-                            <span className="truncate max-w-[140px] font-mono">
-                              {formatValue(step.variables[name])}
-                            </span>
-                          </div>
-                        );
-                      }
-                      return null;
+                      if (!step.variables || !Object.prototype.hasOwnProperty.call(step.variables, name)) return null;
+                      const histVal = step.variables[name];
+                      const isThisStep = currentStep === step;
+
+                      return (
+                        <div
+                          key={sIdx}
+                          onClick={() => onSelectStep?.(sIdx)}
+                          className={`flex items-center justify-between px-2.5 py-1 rounded-lg cursor-pointer transition-colors ${
+                            isThisStep
+                              ? 'border font-bold'
+                              : 'hover:opacity-80'
+                          }`}
+                          style={
+                            isThisStep
+                              ? {
+                                  backgroundColor: 'var(--accent-subtle)',
+                                  borderColor: 'var(--accent-border)',
+                                  color: 'var(--accent-text)',
+                                }
+                              : {
+                                  color: 'var(--text-muted)',
+                                }
+                          }
+                        >
+                          <span className="text-[11px]">
+                            Step #{sIdx + 1} (Line {step.line}):
+                          </span>
+                          <span className="font-semibold truncate max-w-[150px]" style={{ color: 'var(--text-main)' }}>
+                            {formatValue(histVal)}
+                          </span>
+                        </div>
+                      );
                     })}
                   </div>
                 )}
@@ -163,29 +247,6 @@ export const VariableInspector: React.FC<VariableInspectorProps> = ({
           })}
         </div>
       )}
-
-      {/* Global Roster of All Variables In Program */}
-      <div className="mt-1 pt-2.5 border-t border-slate-800">
-        <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1 mb-2">
-          <Sparkles className="w-3 h-3 text-indigo-400" />
-          <span>All Program Variables ({variableRoles.length})</span>
-        </div>
-        <div className="space-y-1.5">
-          {variableRoles.map((vr) => (
-            <div
-              key={vr.name}
-              className="text-xs p-2 rounded bg-slate-950 border border-slate-800 flex items-baseline gap-1.5"
-            >
-              <code className="font-mono text-[11px] font-bold text-indigo-400 shrink-0">
-                {vr.name}:
-              </code>
-              <span className="text-slate-300 text-[11px] leading-tight">
-                {vr.role}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
     </div>
   );
 };

@@ -95,29 +95,48 @@ print(result)`);
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-xs p-4">
-      <div className="bg-slate-900 rounded-xl border border-slate-800 shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-xs p-4" style={{ backgroundColor: 'rgba(0, 0, 0, 0.75)' }}>
+      <div
+        className="rounded-2xl border shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden transition-colors"
+        style={{
+          backgroundColor: 'var(--bg-panel)',
+          borderColor: 'var(--border-main)',
+          color: 'var(--text-main)',
+        }}
+      >
         
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-950/90">
+        <div
+          className="flex items-center justify-between px-6 py-4 border-b shrink-0"
+          style={{
+            backgroundColor: 'var(--bg-header)',
+            borderColor: 'var(--border-main)',
+          }}
+        >
           <div>
-            <h2 className="text-base font-semibold text-slate-100">
+            <h2 className="text-base font-semibold" style={{ color: 'var(--text-main)' }}>
               Provide Code & Execution Trace
             </h2>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
               Supply ground-truth execution trace produced from a sandbox run
             </p>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={loadSimpleExample}
-              className="text-xs font-medium px-3 py-1.5 rounded-md bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 transition-colors"
+              className="text-xs font-medium px-3 py-1.5 rounded-lg border transition-colors cursor-pointer"
+              style={{
+                backgroundColor: 'var(--bg-card)',
+                borderColor: 'var(--border-main)',
+                color: 'var(--text-main)',
+              }}
             >
               Load Countdown Demo
             </button>
             <button
               onClick={onClose}
-              className="p-1.5 rounded-md text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors"
+              className="p-1.5 rounded-lg transition-colors cursor-pointer hover:opacity-80"
+              style={{ color: 'var(--text-muted)' }}
             >
               <X className="w-5 h-5" />
             </button>
@@ -139,13 +158,18 @@ print(result)`);
             {/* Source code input */}
             <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-semibold text-slate-300">
+                <label className="text-xs font-semibold" style={{ color: 'var(--text-main)' }}>
                   1. Source Code
                 </label>
                 <select
                   value={language}
                   onChange={(e) => setLanguage(e.target.value)}
-                  className="text-xs font-mono font-medium bg-slate-950 border border-slate-700 rounded px-2 py-0.5 text-slate-200 outline-hidden"
+                  className="text-xs font-mono font-medium border rounded px-2 py-0.5 outline-hidden"
+                  style={{
+                    backgroundColor: 'var(--bg-card)',
+                    borderColor: 'var(--border-main)',
+                    color: 'var(--text-main)',
+                  }}
                 >
                   <option value="python">Python</option>
                   <option value="javascript">JavaScript</option>
@@ -159,17 +183,22 @@ print(result)`);
                 onChange={(e) => setCode(e.target.value)}
                 placeholder="// Enter original source code here..."
                 rows={16}
-                className="w-full p-3 font-mono text-xs rounded-lg border border-slate-800 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-slate-950 text-slate-200 placeholder-slate-600"
+                className="w-full p-3 font-mono text-xs rounded-xl border focus:outline-hidden"
+                style={{
+                  backgroundColor: 'var(--bg-card)',
+                  borderColor: 'var(--border-main)',
+                  color: 'var(--text-main)',
+                }}
               />
             </div>
 
             {/* Trace JSON input */}
             <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-semibold text-slate-300">
+                <label className="text-xs font-semibold" style={{ color: 'var(--text-main)' }}>
                   2. Execution Trace (JSON array)
                 </label>
-                <span className="text-[11px] font-mono text-slate-500">
+                <span className="text-[11px] font-mono" style={{ color: 'var(--text-dim)' }}>
                   [&#123; line, variables, output &#125;]
                 </span>
               </div>
@@ -178,32 +207,52 @@ print(result)`);
                 onChange={(e) => setTraceText(e.target.value)}
                 placeholder="[ { &quot;line&quot;: 1, &quot;variables&quot;: {}, &quot;output&quot;: &quot;&quot; } ]"
                 rows={16}
-                className="w-full p-3 font-mono text-xs rounded-lg border border-slate-800 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-slate-950 text-slate-200 placeholder-slate-600"
+                className="w-full p-3 font-mono text-xs rounded-xl border focus:outline-hidden"
+                style={{
+                  backgroundColor: 'var(--bg-card)',
+                  borderColor: 'var(--border-main)',
+                  color: 'var(--text-main)',
+                }}
               />
             </div>
 
           </div>
 
-          <div className="bg-slate-950 p-3 rounded-lg border border-slate-800 text-xs text-slate-400 flex items-start gap-2">
+          <div
+            className="p-3 rounded-xl border text-xs flex items-start gap-2"
+            style={{
+              backgroundColor: 'var(--bg-card)',
+              borderColor: 'var(--border-main)',
+              color: 'var(--text-muted)',
+            }}
+          >
             <CheckCircle2 className="w-4 h-4 text-emerald-400 mt-0.5 shrink-0" />
             <div>
-              <span className="font-semibold text-slate-200">Ground Truth Principle:</span> The annotation engine will never recompute, alter, or contradict values in the trace. Every line, variable snapshot, and printed output is treated as immutable fact.
+              <span className="font-semibold" style={{ color: 'var(--text-main)' }}>Ground Truth Principle:</span> The annotation engine will never recompute, alter, or contradict values in the trace. Every line, variable snapshot, and printed output is treated as immutable fact.
             </div>
           </div>
 
         </div>
 
         {/* Modal Footer */}
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-800 bg-slate-950/90">
+        <div
+          className="flex items-center justify-end gap-3 px-6 py-4 border-t shrink-0"
+          style={{
+            backgroundColor: 'var(--bg-header)',
+            borderColor: 'var(--border-main)',
+          }}
+        >
           <button
             onClick={onClose}
-            className="px-4 py-2 text-xs font-medium text-slate-400 hover:text-slate-200 transition-colors"
+            className="px-4 py-2 text-xs font-medium transition-colors cursor-pointer hover:opacity-80"
+            style={{ color: 'var(--text-muted)' }}
           >
             Cancel
           </button>
           <button
             onClick={handleValidateAndSubmit}
-            className="inline-flex items-center gap-2 px-5 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 rounded-lg transition-colors shadow-xs"
+            className="inline-flex items-center gap-2 px-5 py-2 text-xs font-semibold text-white rounded-lg transition-opacity cursor-pointer shadow-xs hover:opacity-90"
+            style={{ backgroundColor: 'var(--accent-primary)' }}
           >
             <Play className="w-3.5 h-3.5 fill-current" />
             <span>Apply Trace & Annotate</span>
